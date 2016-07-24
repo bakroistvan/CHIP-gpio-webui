@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+	<title>CHIP GPIO webui</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-cookies.js"></script>
+
+	<script type="text/javascript">
+		var chipApp = angular.module('chipApp', ['ngCookies']);
+
+		chipApp.controller('gpioCtrl', ['$scope', '$http', '$timeout', '$cookies',
+		function ($scope, $http, $timeout, $cookies) {
+			$http.get('/settings.json').success(function(data) {
+				$scope.gpios = data.gpio;
+				console.log(data);
+			});
+
+			var poll = function() {
+				$timeout(function() {
+					
+					$http({
+						url: '/api/status',
+						method: 'GET'
+					}).success(function(data) {
+						$scope.status = data;
+					});
+					poll();
+				}, 2000);
+			};
+			poll();
+			
+			$scope.setOn = function(gpio) {
+				$http({
+					url: '/api/set',
+					method: 'POST',
+					data: {
+						pin: gpio.pin,
+						todo: true
+					}
+				});
+			}
+			$scope.setOff = function(gpio) {
+				$http({
+					url: '/api/set',
+					method: 'POST',
+					data: {
+						pin: gpio.pin,
+						todo: false
+					}
+				});
+			}
+
+			$scope.toggle = function(gpio) {
+				$http({
+					url: '/api/set',
+					method: 'POST',
+					data: {
+						pin: gpio.pin,
+						todo: "toggle"
+					}
+				});
+			}
+		}]);
+	</script>
+</head>
+<body ng-app="chipApp" ng-controller="chipCtrl">
+
+<div class="container" role="main">
+	<div class="row" ng-repeat="gpio in gpios" ng-if="pw">
+		<div class="col-xs-12">{{gpio.name}}</div>
+		<div class="col-xs-4">
+			<a ng-click="toggle(gpio)"><button class="btn btn-info btn-lg">TOGGLE</button></a>&nbsp;
+		</div>
+		<div class="col-xs-4">
+			<a ng-click="setOn(gpio)"><button class="btn btn-primary btn-lg btn-block" ng-disabled="status[gpio.pin] == 1">ON</button></a>&nbsp;
+		</div>
+		<div class="col-xs-4">
+			<a ng-click="setOff(gpio)"><button class="btn btn-default btn-lg btn-block" ng-disabled="status[gpio.pin] == 0">OFF</button></a>
+		</div>
+	</div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</body>
+</html>
