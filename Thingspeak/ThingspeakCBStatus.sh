@@ -10,7 +10,7 @@ os.environ['TERM'] = "bash"
 
 # Return CPU temperature as a float
 def getCPUtemperature():
-    temp_script = os.path.realpath(__file__) + "chip_temp_c.sh"
+    temp_script = os.path.abspath(os.path.realpath(__file__)) + "/chip_temp_c.sh"
     if os.path.isfile(temp_script):
         res = float(os.popen(temp_script).readline())
         return(str(res))
@@ -52,6 +52,7 @@ def getDiskSpace():
     return(line.split()[1:5])
 
 def getGPIO(pin):
+    GPIO.setup(pin, GPIO.IN)
     return(GPIO.input(pin))
 
 
